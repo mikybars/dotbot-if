@@ -10,6 +10,9 @@ from dotbot.util import module
 class If(dotbot.Plugin):
     _directive = 'if'
 
+    _default_stdout = True
+    _default_stderr = True
+
     def can_handle(self, directive):
         return directive == self._directive
 
@@ -30,7 +33,8 @@ class If(dotbot.Plugin):
         if not isinstance(cond, str):
             raise ValueError('"cond" parameter must be a string')
 
-        ret = subprocess.run(['bash', '-c', cond])
+        stdout, stderr = self._get_streams()
+        ret = subprocess.run(['bash', '-c', cond], stdout=stdout, stderr=stderr)
         is_met = ret.returncode == 0
 
         if (is_met and 'met' not in data) or (not is_met and 'unmet' not in data):
@@ -61,3 +65,13 @@ class If(dotbot.Plugin):
             plugins=self._load_plugins(),
         )
         return dispatcher.dispatch(data)
+
+    def _get_streams(self):
+        defaults = self._context.defaults().get('if', {})
+        echo_stdout = defaults.get('stdout', self._default_stdout)
+        echo_stderr = defaults.get('stderr', self._default_stderr)
+
+        stdout = None if echo_stdout else subprocess.DEVNULL
+        stderr = None if echo_stderr else subprocess.DEVNULL
+
+        return stdout, stderr
