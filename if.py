@@ -26,27 +26,39 @@ class If(dotbot.Plugin):
         return self._handle_single_if(data)
 
     def _handle_single_if(self, data):
-        cond = data.get('cond')
+        cond = self._get_cond_arg(**{'cond': data.get('cond')})
+        not_cond = self._get_cond_arg(**{'not': data.get('not')})
 
-        if not cond:
-            raise ValueError('Missing "cond" parameter for "if" directive')
-        if isinstance(cond, list):
-            if len(cond) < 2:
-                raise ValueError('"cond" must be of the form [description, command]')
-            cond = cond[1]
-        elif not isinstance(cond, str):
-            raise ValueError('"cond" parameter must be a string or a list')
+        if not cond and not not_cond:
+            raise ValueError('Missing "cond" or "not" parameter for "if" directive')
 
         stdout, stderr = self._get_streams()
-        ret = subprocess.run(['bash', '-c', cond], stdout=stdout, stderr=stderr)
-        is_met = ret.returncode == 0
+        ret = subprocess.run(['bash', '-c', cond or not_cond], stdout=stdout, stderr=stderr)
+        is_met = ret.returncode == 0 if cond else ret.returncode != 0
 
         met_branch = data.get('met') or data.get('then') or None
         unmet_branch = data.get('unmet') or data.get('else') or None
-        if (is_met and not met_branch) or (not is_met and not unmet_branch):
-            return True
+        if is_met and met_branch:
+            return self._run_internal(met_branch)
+        if not is_met and unmet_branch:
+            return self._run_internal(unmet_branch)
 
-        return self._run_internal(met_branch if is_met else unmet_branch)
+        return True
+
+    def _get_cond_arg(self, **kwargs):
+        [(param, value)] = kwargs.items()
+
+        if value is None:
+            return None
+
+        if isinstance(value, list) and len(value) != 2:
+            raise ValueError(f'"{param}" must be of the form [description, command]')
+        if not isinstance(value, list) and not isinstance(value, str):
+            raise ValueError(f'"{param}" parameter must be a string or a list')
+
+        if isinstance(value, list):
+            return value[1]
+        return value
 
     def _load_plugins(self):
         plugin_paths = self._context.options().plugins
