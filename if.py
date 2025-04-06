@@ -37,10 +37,12 @@ class If(dotbot.Plugin):
         ret = subprocess.run(['bash', '-c', cond], stdout=stdout, stderr=stderr)
         is_met = ret.returncode == 0
 
-        if (is_met and 'met' not in data) or (not is_met and 'unmet' not in data):
+        met_branch = data.get('met') or data.get('then') or None
+        unmet_branch = data.get('unmet') or data.get('else') or None
+        if (is_met and not met_branch) or (not is_met and not unmet_branch):
             return True
 
-        return self._run_internal(data['met'] if is_met else data['unmet'])
+        return self._run_internal(met_branch if is_met else unmet_branch)
 
     def _load_plugins(self):
         plugin_paths = self._context.options().plugins

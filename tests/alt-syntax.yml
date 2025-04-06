@@ -1,0 +1,8 @@
+- if:
+  - cond: '[[ -d / ]]'
+    then:
+    - shell:
+      - echo "if..then"
+    else:
+    - shell:
+      - echo "else"
