@@ -1,0 +1,8 @@
+- if:
+  - cond: [ 'brew installed', 'command -v brew' ]
+    then:
+    - shell:
+      - echo "brew installed"
+    else:
+    - shell:
+      - echo "brew not installed"

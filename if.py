@@ -30,8 +30,12 @@ class If(dotbot.Plugin):
 
         if not cond:
             raise ValueError('Missing "cond" parameter for "if" directive')
-        if not isinstance(cond, str):
-            raise ValueError('"cond" parameter must be a string')
+        if isinstance(cond, list):
+            if len(cond) < 2:
+                raise ValueError('"cond" must be of the form [description, command]')
+            cond = cond[1]
+        elif not isinstance(cond, str):
+            raise ValueError('"cond" parameter must be a string or a list')
 
         stdout, stderr = self._get_streams()
         ret = subprocess.run(['bash', '-c', cond], stdout=stdout, stderr=stderr)
