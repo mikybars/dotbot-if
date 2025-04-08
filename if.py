@@ -82,7 +82,7 @@ class If(dotbot.Plugin):
             options=self._context.options(),
             plugins=self._load_plugins(),
         )
-        return dispatcher.dispatch(data)
+        return dispatcher.dispatch([{'defaults': self._context.defaults()}] + data)
 
     def _get_streams(self):
         defaults = self._context.defaults().get('if', {})
