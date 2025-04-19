@@ -33,7 +33,8 @@ class If(dotbot.Plugin):
             raise ValueError('Missing "cond" or "not" parameter for "if" directive')
 
         stdout, stderr = self._get_streams()
-        ret = subprocess.run(['bash', '-c', cond or not_cond], stdout=stdout, stderr=stderr)
+        shell = os.environ.get("SHELL", "/bin/bash")
+        ret = subprocess.run([shell, '-c', cond or not_cond], stdout=stdout, stderr=stderr)
         is_met = ret.returncode == 0 if cond else ret.returncode != 0
 
         met_branch = data.get('met') or data.get('then') or None
